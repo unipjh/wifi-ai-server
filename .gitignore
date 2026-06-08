@@ -1,0 +1,48 @@
+# Ignore everything by default.
+*
+
+# Keep this ignore policy visible.
+!.gitignore
+
+# Core server code.
+!app/
+!app/**
+!main.py
+
+# Core dependency/runtime files.
+!requirements.txt
+!start.sh
+
+# Requested report folder.
+!report/
+!report/**
+
+# Never track generated Python artifacts.
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Never track local environments or secrets.
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Never track local/editor/system files.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Never track local databases, logs, archives, and generated outputs.
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.zip
+*.tar
+*.gz
+*.7z
+*.rar
