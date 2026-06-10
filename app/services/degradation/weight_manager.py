@@ -2,7 +2,12 @@ import math
 from dataclasses import dataclass, field
 
 from app.core.config import ALPHA, LAMBDA_, INITIAL_WEIGHTS
-from app.services.degradation.ewmv import EWMVState, METRICS, update_ewmv
+from app.services.degradation.ewmv import (
+    EWMVState,
+    METRICS,
+    initial_ewmv_state,
+    update_ewmv,
+)
 
 
 @dataclass
@@ -19,7 +24,9 @@ _zone_states: dict[str, WeightState] = {}
 
 def get_or_init_state(zone_id: str) -> WeightState:
     if zone_id not in _zone_states:
-        _zone_states[zone_id] = WeightState()
+        _zone_states[zone_id] = WeightState(
+            ewmv_state=initial_ewmv_state(zone_id),
+        )
     return _zone_states[zone_id]
 
 

@@ -1,5 +1,13 @@
 from dataclasses import dataclass, field
 
+from app.core.config import (
+    INITIAL_STATS,
+    NORM_MAX,
+    RSSI_BEST,
+    RSSI_WORST,
+    _DEFAULT_STAT,
+)
+
 # Must match keys in INITIAL_WEIGHTS and normalizer output
 # 모든 키는 API 필드명과 동일하게 유지
 METRICS: tuple[str, ...] = (
@@ -19,6 +27,46 @@ class EWMVState:
     # σ²(i, t-1): per-metric exponentially weighted moving variance
     var: dict[str, float] = field(
         default_factory=lambda: {m: 0.0 for m in METRICS}
+    )
+
+
+def _clamp01(value: float) -> float:
+    return max(0.0, min(value, 1.0))
+
+
+def _normalize_stat_mean(metric: str, raw_mean: float) -> float:
+    if metric == "rssi":
+        rssi_range = RSSI_BEST - RSSI_WORST
+        return 1.0 - _clamp01((raw_mean - RSSI_WORST) / rssi_range)
+
+    if metric in ("download_mbps", "upload_mbps"):
+        return 1.0 - _clamp01(raw_mean / NORM_MAX[metric])
+
+    return _clamp01(raw_mean / NORM_MAX[metric])
+
+
+def _normalize_stat_var(metric: str, raw_std: float) -> float:
+    if metric == "rssi":
+        denom = RSSI_BEST - RSSI_WORST
+    else:
+        denom = NORM_MAX[metric]
+
+    normalized_std = _clamp01(raw_std / denom)
+    return normalized_std ** 2
+
+
+def initial_ewmv_state(location: str) -> EWMVState:
+    """Build a location-specific EWMV prior from collected raw statistics."""
+    stats = INITIAL_STATS.get(location, _DEFAULT_STAT())
+    return EWMVState(
+        mu={
+            metric: _normalize_stat_mean(metric, stats[metric]["mean"])
+            for metric in METRICS
+        },
+        var={
+            metric: _normalize_stat_var(metric, stats[metric]["std"])
+            for metric in METRICS
+        },
     )
 
 
