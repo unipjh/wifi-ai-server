@@ -3,6 +3,7 @@
 
 # Keep this ignore policy visible.
 !.gitignore
+!README.md
 
 # Core server code.
 !app/
